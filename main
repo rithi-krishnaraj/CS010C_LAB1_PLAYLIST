@@ -1,0 +1,308 @@
+#include <iostream>
+#include <cctype>
+#include <iomanip>
+using namespace std;
+
+#include "Playlist.h"
+
+using namespace std;
+
+void PrintMenu(const string playlistTitle) {
+    char userInput = ' ';
+    string uniqueID;
+    string songName;
+    string artistName;
+    int songLength = 0;
+    int songPosition = 0;
+    int currPosition = 0;
+    int newPosition = 0;
+    int totalTime = 0;
+    PlaylistNode* headNode = nullptr;
+    PlaylistNode* tailNode = nullptr;
+    PlaylistNode* deletedNode = headNode; //used in remove function
+    PlaylistNode* newSong = 0; //used
+    PlaylistNode* songNode = headNode; //used
+
+
+    while (userInput != 'q') { //when userInput doesn't quit menu 
+        userInput = ' ';
+        cout << playlistTitle << " PLAYLIST MENU" << endl;
+        cout << "a - Add song" << endl;
+        cout << "d - Remove song" << endl;
+        cout << "c - Change position of song" << endl;
+        cout << "s - Output songs by specific artist" << endl;
+        cout << "t - Output total time of playlist (in seconds)" << endl;
+        cout << "o - Output full playlist" << endl;
+        cout << "q - Quit" << endl;
+        cout << endl;
+        
+        while (userInput != 'a' && userInput != 'd' && userInput != 'c' && userInput != 's' && userInput != 't' && userInput != 'o' && userInput != 'q') { //asks for new userInput if input isn't valid and doesn't match given options //DONE 
+            cout << "Choose an option:" << endl;
+            cin >> userInput;
+        }
+        if (userInput == 'a') { // user adds a song //DONE
+            
+            cout << "ADD SONG" << endl;
+            cout << "Enter song's unique ID:" << endl;
+            cin >> uniqueID;
+
+            cin.ignore();
+            cout << "Enter song's name:" << endl;
+            getline(cin, songName);
+
+            cout << "Enter artist's name:" << endl;
+            getline(cin, artistName);
+
+            
+            cout << "Enter song's length (in seconds):" << endl;
+            cin >> songLength;
+            // while (!isdigit(songLength)) {
+            //     cout << "Enter song's length (in seconds):" << endl;
+            //     cin >> songLength;
+            // }
+            cout << endl;
+
+            newSong = new PlaylistNode(uniqueID, songName, artistName, songLength); //creates new node for playlist containing information for the song
+
+            if (headNode == nullptr) {
+                headNode = newSong;
+                tailNode = newSong;
+            }
+            else {
+                tailNode->InsertAfter(newSong);
+                tailNode = tailNode->GetNext(); //tailNode is moved to the node after the original tailNode
+            }
+            //newSong->PrintPlaylistNode(); //TEST CASE: song information is added to list
+        }
+        else if (userInput == 'd') { //user removes a song //DONE
+
+            //list is empty
+            if (headNode == nullptr) {
+                cout << "Playlist is empty" << endl;
+            }
+            else { //playlist has certain number of nodes
+                bool idFound = false;
+
+                cout << "REMOVE SONG" << endl;
+                cout << "Enter song's unique ID:" << endl;
+                cin.ignore();
+                getline(cin, uniqueID);
+
+                
+                if (headNode->GetID() == uniqueID) { //removing from front of the list
+                    deletedNode = headNode; //head will be deleted
+                    headNode = headNode->GetNext(); //head is moved to next node
+                    if (headNode == nullptr) { //when node is removed from a single node list...
+                        tailNode = nullptr;
+                    }
+                    cout << "\"" << deletedNode->GetSongName() << "\" removed." << endl;
+                    cout << endl;
+                    delete deletedNode; //memory is deallocated
+                }
+                else { //removing from middle or end of the list
+                    PlaylistNode* prevNode = headNode;
+                    songNode = headNode; //starting from the headNode
+                    while (songNode != nullptr) {
+                        if (songNode->GetID() == uniqueID) {
+                            deletedNode = songNode;
+                            prevNode->SetNext(songNode->GetNext()); //prev node points to node after songNode
+                            if (songNode == tailNode) { //if deleting tailnode
+                                tailNode = prevNode; //tailNode becomes previous node
+                            }
+                            cout << "\"" << deletedNode->GetSongName() << "\" removed." << endl;
+                            cout << endl;
+                            delete deletedNode; // memory is deallocated
+                            idFound = true;
+                        }
+                        prevNode = songNode; //prevNode is moved to songNode
+                        songNode = songNode->GetNext(); // songNode is moved to next node
+                    }
+                    if (!idFound) {
+                        cout << "Song not found" << endl;
+                    }   
+                }
+            }
+            
+        }
+        else if (userInput == 'c') { //user changes position of the song //FINISH
+            int numNodes = 0;
+            songNode = headNode;
+
+            if (songNode == nullptr) {
+                cout << "Playlist is empty" << endl;
+            }
+            else if (songNode->GetNext() == nullptr) {
+                cout << "Playlist only has 1 song" << endl;
+            }
+            else {            
+                while (songNode != nullptr) { //checks size of list
+                    numNodes++;
+                    songNode = songNode->GetNext();
+                }
+
+                cout << "CHANGE POSITION OF SONG" << endl;
+                cout << "Enter song's current position:" << endl;
+                cin >> currPosition;
+                cout << "Enter new position for song:" << endl;
+                cin >> newPosition;
+
+                if (currPosition < 1) { //if current Position is less than 1, set to 1
+                    currPosition = 1;
+                }
+                else if (currPosition > numNodes) {
+                    currPosition = numNodes;
+                }
+
+                if (newPosition < 1) {
+                    newPosition = 1;
+                }
+                else if (newPosition > numNodes) {
+                    newPosition = numNodes;
+                }
+
+                if (currPosition == newPosition) {
+                    cout << "Song is currently in new position" << endl;
+                }
+                else {
+                    PlaylistNode* currNode = headNode;
+                    PlaylistNode* newNode = headNode;
+                    PlaylistNode* prevCurrNode = nullptr; 
+                    PlaylistNode* prevNewNode = nullptr;
+                    songPosition = 0;
+                    
+                    songNode = headNode;
+
+                    while (songNode != nullptr) { //traverse through the list to find currNode and newNode
+                        if (songPosition + 1 == currPosition) {
+                            prevCurrNode = songNode;
+                            currNode = songNode->GetNext();
+                        }
+                        if (songPosition + 1 == newPosition) {
+                            prevNewNode = songNode;
+                            newNode = songNode->GetNext();
+                        }
+                        songPosition++; //keeps track of song Position in the playlist
+                        songNode = songNode->GetNext();
+                    }
+
+
+                    if (currPosition < newPosition) {
+                        if (currNode == headNode) {
+                            headNode = headNode->GetNext();
+                        }
+                        else {
+                            prevCurrNode->SetNext(newNode->GetNext());
+                        }
+                        currNode->SetNext(newNode->GetNext());
+                        newNode->SetNext(currNode);
+                        if (currNode->GetNext() == nullptr) {
+                            tailNode = currNode;
+                        }
+                    }
+                    else { //moving down a list
+                        if (currNode == tailNode) {
+                            prevCurrNode->SetNext(nullptr);
+                            tailNode = prevCurrNode;
+                        }
+                        else {
+                            prevCurrNode->SetNext(currNode->GetNext());
+                        }
+                        currNode->SetNext(newNode);
+                        if (newNode == headNode) {
+                            headNode = currNode;
+                        }
+                        else {
+                            prevNewNode->SetNext(currNode);
+                        }
+                    }
+
+                    cout << "\"" << currNode->GetSongName() << "\" moved to position " << newPosition << endl;
+                    cout << endl;
+
+                }
+            }
+        }
+        else if (userInput == 's') { //output songs by specific artist //DONE
+            bool artistFound = false;
+            cout << "OUTPUT SONGS BY SPECIFIC ARTIST" << endl;
+            cout << "Enter artist's name:" << endl;
+            cout << endl;
+            cin.ignore(); //clears any input before artistName
+            getline(cin, artistName);
+
+            songNode = headNode;
+
+            if (songNode == nullptr) {
+                cout << "Playlist is empty" << endl;
+                cout << endl;
+            }
+            else {
+                songPosition = 0;
+                while (songNode != nullptr) {
+                    songPosition++;
+                    if (songNode->GetArtistName() == artistName) {
+                        cout << songPosition << "." << endl;
+                        songNode->PrintPlaylistNode();
+                        artistFound = true;
+                    }
+                    songNode = songNode->GetNext();
+                }
+                if (!artistFound) {
+                    cout << "Artist Not Found" << endl;
+                }
+
+            }
+
+        }
+        else if (userInput == 't') { //outputs total time of playlist(in seconds) //DONE
+            cout << "OUTPUT TOTAL TIME OF PLAYLIST (IN SECONDS)" << endl;
+            cout << "Total time: ";
+            songNode = headNode;
+            if (songNode == nullptr) {
+                totalTime = 0;
+            }
+            else {
+                totalTime = 0;
+                while (songNode != nullptr) {
+                    totalTime += songNode->GetSongLength();
+                    songNode = songNode->GetNext();
+                }
+            }
+            cout << totalTime << " seconds" << endl;
+            cout << endl;
+        }
+        else if (userInput == 'o') { //outputs full playlist //DONE
+            cout << playlistTitle << " - OUTPUT FULL PLAYLIST" << endl;
+            songNode = headNode;
+
+            if (songNode == nullptr) { //checks to see if the playlist is empty
+                cout << "Playlist is empty" << endl;
+                cout << endl;
+            }
+            else { //if playlist isn't empty
+                songPosition = 0;
+                while (songNode != nullptr) {
+                    songPosition++; //song's position in the list
+                    cout << songPosition << "." << endl;
+                    songNode->PrintPlaylistNode(); // outputs node information
+                    songNode = songNode->GetNext(); //moves to next node
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    string playlistTitle;
+    
+   
+    // Prompt user for playlist title
+    cout << "Enter playlist's title:" << endl;
+    getline(cin, playlistTitle);
+    cout << endl;
+    
+    // Output play list menu options
+    PrintMenu(playlistTitle);
+    
+    return 0;
+}
